@@ -39,7 +39,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add historical_results.csv harvest_matrix.csv
+          git add historical_results.csv
+          [ -f harvest_matrix.csv ] && git add harvest_matrix.csv
           git diff --cached --quiet || git commit -m "Betfair harvest: $(date -u +'%Y-%m-%d %H:%M UTC')"
           git pull --rebase --autostash
           git push
