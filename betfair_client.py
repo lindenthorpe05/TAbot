@@ -18,6 +18,7 @@ See: https://betfair-developer-docs.atlassian.net/wiki/spaces/1smk3cen4v3lu3yomq
 
 import os
 import tempfile
+from pathlib import Path
 from datetime import datetime, timezone
 
 import requests
@@ -77,6 +78,11 @@ class BetfairClient:
     def login(self) -> None:
         """Non-interactive certificate login. Populates self.session_token."""
         cert_path, key_path = _resolve_cert_paths()
+
+        for label, path in (("cert", cert_path), ("key", key_path)):
+            content = Path(path).read_text(encoding="utf-8")
+            first_line = content.splitlines()[0] if content.splitlines() else "<empty>"
+            print(f"[diag] {label} file: {path} ({len(content)} bytes), first line: {first_line!r}")
 
         resp = requests.post(
             CERT_LOGIN_URL,
