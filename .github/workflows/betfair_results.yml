@@ -1,0 +1,45 @@
+name: Betfair results harvest
+
+on:
+  schedule:
+    - cron: "5-59/20 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: betfair-harvest
+  cancel-in-progress: false
+
+jobs:
+  harvest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: pip install pandas requests
+
+      - name: Run Betfair results harvest
+        env:
+          BETFAIR_USERNAME: ${{ secrets.BETFAIR_USERNAME }}
+          BETFAIR_PASSWORD: ${{ secrets.BETFAIR_PASSWORD }}
+          BETFAIR_APP_KEY: ${{ secrets.BETFAIR_APP_KEY }}
+          BETFAIR_CERT_PEM: ${{ secrets.BETFAIR_CERT_PEM }}
+          BETFAIR_KEY_PEM: ${{ secrets.BETFAIR_KEY_PEM }}
+        run: python betfair_harvest.py
+
+      - name: Commit updated data files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add historical_results.csv harvest_matrix.csv
+          git diff --cached --quiet || git commit -m "Betfair harvest: $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git pull --rebase --autostash
+          git push

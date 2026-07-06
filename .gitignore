@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.log
+
+# Personal/local runtime data - not meant for the public repo
+chat_history.json
+current_race_matrix.csv
+raw_race_data.json
+xgb_model.json
+
+.claude/

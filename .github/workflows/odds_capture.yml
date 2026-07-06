@@ -1,0 +1,42 @@
+name: Odds capture
+
+on:
+  schedule:
+    - cron: "*/20 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: odds-capture
+  cancel-in-progress: false
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: pip install pandas playwright playwright-stealth
+
+      - name: Install Chromium
+        run: playwright install --with-deps chromium
+
+      - name: Run odds capture
+        run: python odds_capture.py
+
+      - name: Commit updated harvest_matrix.csv
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add harvest_matrix.csv
+          git diff --cached --quiet || git commit -m "Odds capture: $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git pull --rebase --autostash
+          git push
